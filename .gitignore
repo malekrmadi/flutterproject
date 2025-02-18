@@ -1,0 +1,15 @@
+# Flutter
+.dart_tool/
+build/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+pubspec.lock
+.idea/
+.vscode/
+
+# MacOS
+macos/
+
+# Windows
+windows/
