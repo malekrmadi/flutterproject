@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../widgets/custom_button.dart';
 import '../../core/routes.dart';
 import '../../core/themes.dart';
@@ -16,26 +17,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<OnboardingPage> _pages = [
     OnboardingPage(
-      title: 'Welcome to Your App',
-      description: 'Your one-stop solution for all your needs',
-      icon: Icons.star_outline,
+      title: 'Gestion des Attestations',
+      description: 'Créez et gérez facilement vos attestations de vente et de location',
+      icon: Icons.description,
     ),
     OnboardingPage(
-      title: 'Easy to Use',
-      description: 'Simple and intuitive interface designed for you',
-      icon: Icons.touch_app_outlined,
+      title: 'Vérification Instantanée',
+      description: 'Vérifiez l\'authenticité des attestations en temps réel',
+      icon: Icons.verified_user,
     ),
     OnboardingPage(
-      title: 'Get Started',
-      description: 'Create an account and start your journey',
-      icon: Icons.rocket_launch_outlined,
+      title: 'Gestion des Véhicules',
+      description: 'Accédez aux informations détaillées des véhicules',
+      icon: Icons.directions_car,
     ),
   ];
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
+  void _onNextPage() {
+    if (_currentPage < _pages.length - 1) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      _completeOnboarding();
+    }
+  }
+
+  Future<void> _completeOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_seen_onboarding', true);
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(context, AppRoutes.login);
   }
 
   @override
@@ -49,12 +62,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 controller: _pageController,
                 itemCount: _pages.length,
                 onPageChanged: (index) {
-                  setState(() {
-                    _currentPage = index;
-                  });
+                  setState(() => _currentPage = index);
                 },
                 itemBuilder: (context, index) {
-                  return _buildPage(_pages[index]);
+                  return _OnboardingPageView(_pages[index]);
                 },
               ),
             ),
@@ -66,7 +77,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
                       _pages.length,
-                      (index) => _buildDotIndicator(index),
+                      (index) => Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _currentPage == index
+                              ? AppColors.primary
+                              : AppColors.primary.withOpacity(0.2),
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -74,31 +95,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     text: _currentPage == _pages.length - 1
                         ? 'Get Started'
                         : 'Next',
-                    onPressed: () {
-                      if (_currentPage == _pages.length - 1) {
-                        Navigator.pushReplacementNamed(
-                          context,
-                          AppRoutes.login,
-                        );
-                      } else {
-                        _pageController.nextPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      }
-                    },
+                    onPressed: _onNextPage,
                     size: ButtonSize.large,
                   ),
                   if (_currentPage < _pages.length - 1) ...[
                     const SizedBox(height: 16),
                     CustomButton(
                       text: 'Skip',
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(
-                          context,
-                          AppRoutes.login,
-                        );
-                      },
+                      onPressed: _completeOnboarding,
                       variant: ButtonVariant.text,
                     ),
                   ],
@@ -110,8 +114,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
     );
   }
+}
 
-  Widget _buildPage(OnboardingPage page) {
+class _OnboardingPageView extends StatelessWidget {
+  final OnboardingPage page;
+
+  const _OnboardingPageView(this.page);
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -122,33 +133,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             size: 100,
             color: AppColors.primary,
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 32),
           Text(
             page.title,
-            style: Theme.of(context).textTheme.displayLarge,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text(
             page.description,
-            style: Theme.of(context).textTheme.bodyLarge,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: AppColors.textSecondary,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildDotIndicator(int index) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: 8,
-      height: 8,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: _currentPage == index
-            ? AppColors.primary
-            : AppColors.primary.withOpacity(0.2),
       ),
     );
   }

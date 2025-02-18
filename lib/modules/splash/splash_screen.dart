@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/routes.dart';
 import '../../core/themes.dart';
+import '../../core/services/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -9,34 +11,34 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-
+class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
-
-    _controller.forward();
-
-    // Navigate to onboarding after animation
-    Future.delayed(const Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, AppRoutes.onboarding);
-    });
+    _checkAppState();
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  Future<void> _checkAppState() async {
+    await Future.delayed(const Duration(seconds: 2)); // Show splash for 2 seconds
+
+    if (!mounted) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
+    final isAuthenticated = await AuthService().isAuthenticated();
+
+    if (!mounted) return;
+
+    if (!hasSeenOnboarding) {
+      // First time user - show onboarding
+      Navigator.pushReplacementNamed(context, AppRoutes.onboarding);
+    } else if (isAuthenticated) {
+      // User is logged in - go to dashboard
+      Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+    } else {
+      // User needs to login
+      Navigator.pushReplacementNamed(context, AppRoutes.login);
+    }
   }
 
   @override
@@ -44,26 +46,28 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     return Scaffold(
       backgroundColor: AppColors.primary,
       body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Replace with your app logo
-              Icon(
-                Icons.auto_awesome,
-                size: 80,
-                color: AppColors.background,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Your app logo here
+            Icon(
+              Icons.car_rental,
+              size: 100,
+              color: Colors.white,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Attestation App',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 24),
-              Text(
-                'Your App Name',
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                  color: AppColors.background,
-                ),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 48),
+            const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ],
         ),
       ),
     );

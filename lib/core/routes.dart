@@ -14,6 +14,8 @@ import '../modules/dashboard/features/attestation_verification_screen.dart';
 import '../modules/dashboard/features/vehicle_info_screen.dart';
 import '../modules/dashboard/features/my_attestations_screen.dart';
 import '../modules/dashboard/features/profile_screen.dart';
+import '../widgets/auth_guard.dart';
+import '../modules/admin/user_database_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -31,6 +33,7 @@ class AppRoutes {
   static const String vehicleInfo = '/dashboard/vehicles';
   static const String myAttestations = '/dashboard/my-attestations';
   static const String profile = '/dashboard/profile';
+  static const String userDatabase = '/admin/users-database';
 }
 
 /// Générateur de routes avec gestion des erreurs
@@ -47,11 +50,15 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     case AppRoutes.forgotPassword:
       return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
     case AppRoutes.dashboard:
-      return MaterialPageRoute(builder: (_) => const DashboardScreen());
+      return MaterialPageRoute(
+        builder: (_) => AuthGuard(child: const DashboardScreen()),
+      );
       
     // Feature routes
     case AppRoutes.userManagement:
-      return MaterialPageRoute(builder: (_) => const UserManagementScreen());
+      return MaterialPageRoute(
+        builder: (_) => AuthGuard(child: const UserManagementScreen()),
+      );
     case AppRoutes.attestationGenerator:
       return MaterialPageRoute(builder: (_) => const AttestationGeneratorScreen());
     case AppRoutes.attestationHistory:
@@ -64,6 +71,8 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return MaterialPageRoute(builder: (_) => const MyAttestationsScreen());
     case AppRoutes.profile:
       return MaterialPageRoute(builder: (_) => const ProfileScreen());
+    case AppRoutes.userDatabase:
+      return MaterialPageRoute(builder: (_) => const UserDatabaseScreen());
       
     default:
       return MaterialPageRoute(builder: (_) => const NotFoundScreen());
