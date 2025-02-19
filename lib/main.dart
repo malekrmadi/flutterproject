@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'core/routes.dart';
 import 'core/themes.dart';
-import 'core/services/auth_service.dart';
+//import 'core/services/auth_service.dart';
 import 'modules/splash/splash_screen.dart';
 import 'core/database/database_helper.dart';
 
